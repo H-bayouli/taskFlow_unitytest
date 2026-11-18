@@ -1,8 +1,21 @@
+
 import pytest
+from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from tasks.models import Task
+
+User = get_user_model()
+
+
+@pytest.fixture
+def user(db):
+    return User.objects.create_user(
+        username="testuser",
+        email="test@example.com",
+        password="TestPassword123!",
+    )
 
 
 @pytest.fixture
@@ -11,8 +24,15 @@ def api_client():
 
 
 @pytest.fixture
-def sample_task(db):
+def authenticated_client(api_client, user):
+    api_client.force_authenticate(user=user)
+    return api_client
+
+
+@pytest.fixture
+def sample_task(user):
     return Task.objects.create(
+        user=user,
         title="Write unit tests",
         description="Test the business rules",
         priority=Task.Priority.HIGH,
@@ -21,8 +41,8 @@ def sample_task(db):
 
 
 @pytest.mark.django_db
-def test_create_task_success(api_client):
-    response = api_client.post(
+def test_create_task_success(authenticated_client):
+    response = authenticated_client.post(
         "/api/tasks/",
         {
             "title": "Learn pytest",
@@ -41,8 +61,8 @@ def test_create_task_success(api_client):
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("title", ["", "ab", "  "])
-def test_create_task_with_invalid_title(api_client, title):
-    response = api_client.post(
+def test_create_task_with_invalid_title(authenticated_client, title):
+    response = authenticated_client.post(
         "/api/tasks/",
         {"title": title},
         format="json",
@@ -54,8 +74,8 @@ def test_create_task_with_invalid_title(api_client, title):
 
 
 @pytest.mark.django_db
-def test_create_task_with_invalid_priority(api_client):
-    response = api_client.post(
+def test_create_task_with_invalid_priority(authenticated_client):
+    response = authenticated_client.post(
         "/api/tasks/",
         {
             "title": "Prepare report",
@@ -69,8 +89,8 @@ def test_create_task_with_invalid_priority(api_client):
 
 
 @pytest.mark.django_db
-def test_list_tasks(api_client, sample_task):
-    response = api_client.get("/api/tasks/")
+def test_list_tasks(authenticated_client, sample_task):
+    response = authenticated_client.get("/api/tasks/")
 
     assert response.status_code == status.HTTP_200_OK
     assert len(response.data) == 1
@@ -78,13 +98,14 @@ def test_list_tasks(api_client, sample_task):
 
 
 @pytest.mark.django_db
-def test_filter_tasks_by_priority(api_client, sample_task):
+def test_filter_tasks_by_priority(authenticated_client, sample_task, user):
     Task.objects.create(
+        user=user,
         title="Read documentation",
         priority=Task.Priority.LOW,
     )
 
-    response = api_client.get("/api/tasks/?priority=high")
+    response = authenticated_client.get("/api/tasks/?priority=high")
 
     assert response.status_code == status.HTTP_200_OK
     assert len(response.data) == 1
@@ -92,15 +113,15 @@ def test_filter_tasks_by_priority(api_client, sample_task):
 
 
 @pytest.mark.django_db
-def test_invalid_status_filter_returns_400(api_client):
-    response = api_client.get("/api/tasks/?status=unknown")
+def test_invalid_status_filter_returns_400(authenticated_client):
+    response = authenticated_client.get("/api/tasks/?status=unknown")
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 @pytest.mark.django_db
-def test_update_task(api_client, sample_task):
-    response = api_client.patch(
+def test_update_task(authenticated_client, sample_task):
+    response = authenticated_client.patch(
         f"/api/tasks/{sample_task.id}/",
         {"status": "done"},
         format="json",
@@ -113,8 +134,8 @@ def test_update_task(api_client, sample_task):
 
 
 @pytest.mark.django_db
-def test_delete_task(api_client, sample_task):
-    response = api_client.delete(
+def test_delete_task(authenticated_client, sample_task):
+    response = authenticated_client.delete(
         f"/api/tasks/{sample_task.id}/"
     )
 
@@ -123,7 +144,14 @@ def test_delete_task(api_client, sample_task):
 
 
 @pytest.mark.django_db
-def test_missing_task_returns_404(api_client):
-    response = api_client.get("/api/tasks/999999/")
+def test_missing_task_returns_404(authenticated_client):
+    response = authenticated_client.get("/api/tasks/999999/")
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+def test_unauthenticated_user_cannot_access_tasks(api_client):
+    response = api_client.get("/api/tasks/")
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED

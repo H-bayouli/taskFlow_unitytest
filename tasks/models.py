@@ -1,7 +1,13 @@
 from django.db import models
-
+from django.conf import settings
 
 class Task(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="tasks",
+    )
+    
     class Priority(models.TextChoices):
         LOW = "low", "Low"
         MEDIUM = "medium", "Medium"

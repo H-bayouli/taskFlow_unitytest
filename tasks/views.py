@@ -1,5 +1,7 @@
+
 from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
 
 from .models import Task
 from .serializers import TaskSerializer
@@ -7,10 +9,13 @@ from .serializers import TaskSerializer
 
 class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
-    queryset = Task.objects.all().order_by("-created_at")
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = Task.objects.filter(
+            user=self.request.user
+        ).order_by("-created_at")
+
         params = self.request.query_params
 
         status_value = params.get("status")
@@ -24,6 +29,7 @@ class TaskViewSet(viewsets.ModelViewSet):
                 raise ValidationError({
                     "status": "Invalid status filter."
                 })
+
             queryset = queryset.filter(status=status_value)
 
         if priority_value:
@@ -31,6 +37,10 @@ class TaskViewSet(viewsets.ModelViewSet):
                 raise ValidationError({
                     "priority": "Invalid priority filter."
                 })
+
             queryset = queryset.filter(priority=priority_value)
 
         return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
