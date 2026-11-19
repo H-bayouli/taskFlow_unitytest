@@ -1,0 +1,9 @@
+
+Test                                Expected Actual Result
+----                                -------- ------ ------
+API unauthenticated                      401    401 PASS
+Dashboard protected                      401    401 PASS
+Tasks protected                          401    401 PASS
+Unknown API route                        404    404 PASS
+API recovery after invalid requests      401    401 PASS
+Frontend availability                    200    200 PASS

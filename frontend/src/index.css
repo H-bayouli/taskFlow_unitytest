@@ -1,7 +1,1 @@
-@import "tailwindcss";
-
-body {
-  margin: 0;
-  font-family: Inter, system-ui, sans-serif;
-  background: #f8fafc;
-}
+html{scroll-behavior:smooth}body{margin:0}#root{min-height:100vh}::selection{background:#dfe7ff;color:#253d63}

@@ -1,0 +1,16 @@
+﻿ISO/IEC 25010 - Tests E2E et compatibilite navigateurs
+
+Outil: Playwright 1.65.1
+
+Chromium:
+- Affichage du formulaire et champs accessibles: PASS
+- Refus des identifiants invalides: PASS
+- Total: 2/2 PASS
+
+Firefox:
+- Affichage du formulaire et champs accessibles: PASS
+- Refus des identifiants invalides: PASS
+- Total: 2/2 PASS
+
+Total general: 4/4 PASS
+Parcours testes: authentification - interface de connexion.

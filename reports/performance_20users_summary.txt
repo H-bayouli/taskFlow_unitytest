@@ -1,0 +1,18 @@
+﻿ISO/IEC 25010 - Performance Test
+Tool: Locust 2.47.0
+Target: http://127.0.0.1:8007
+Concurrent users: 20
+Ramp-up: 2 users/second
+Duration: 120 seconds
+Total requests: 1127
+Failures: 0 (0%)
+Average response time: 20 ms
+Median response time: 18 ms
+P95 response time: 36 ms
+P99 response time: 57 ms
+Maximum response time: 120 ms
+Throughput: 9.56 requests/second
+
+Result: PASS
+Criterion: Response time below 500 ms.
+Environment: Local development server; results are not a production capacity guarantee.

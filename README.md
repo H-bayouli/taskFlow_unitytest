@@ -1,304 +1,174 @@
-# TaskFlow — Task Management API
+# TaskFlow — Gestion collaborative de projets
 
-A RESTful Task Management API built with Django REST Framework, with a strong focus on software quality, automated testing, maintainability, and continuous integration.
+Application web de gestion collaborative développée avec Django REST Framework et React/Vite. Elle propose une authentification par token, trois rôles (Admin, Manager, Member), la gestion des projets, tâches et commentaires, un workflow contrôlé, un tableau de bord et un journal d'audit.
 
-## 🎯 Project Objectives
+## Prérequis
 
-TaskFlow is a learning project designed to apply software quality engineering principles in a real application.
+- Python 3.12 recommandé
+- Node.js 20 ou supérieur
+- npm
+- Docker Desktop (optionnel, pour Docker Compose)
 
-The main objectives are to:
+## Installation locale — Windows PowerShell
 
-- Develop a REST API using Django REST Framework.
-- Apply unit testing and integration testing.
-- Validate inputs and handle errors correctly.
-- Measure code coverage with coverage.py.
-- Detect code quality issues with Ruff.
-- Automate quality checks using GitHub Actions.
-- Prevent regressions through automated tests.
+### 1. Backend
 
-## 🛠️ Tech Stack
+À exécuter depuis la racine du projet :
 
-| Technology | Purpose |
-|---|---|
-| Python | Programming language |
-| Django | Web framework |
-| Django REST Framework | REST API development |
-| pytest | Automated test execution |
-| pytest-django | Django testing integration |
-| coverage.py | Code coverage measurement |
-| Ruff | Linting and code quality |
-| GitHub Actions | Continuous integration |
-| SQLite | Development and test database |
-
-## ✨ Features
-
-- Create, retrieve, update, and delete tasks.
-- Validate task titles.
-- Assign priorities: Low, Medium, High.
-- Track statuses: To Do, In Progress, Done.
-- Set optional deadlines.
-- Filter tasks by status and priority.
-- Validate API requests and return appropriate HTTP errors.
-
-## 📁 Project Structure
-
-```text
-taskflow/
-├── config/
-│   ├── settings.py
-│   └── urls.py
-├── tasks/
-│   ├── migrations/
-│   ├── tests/
-│   │   ├── test_services.py
-│   │   ├── test_api.py
-│   │   └── test_models.py
-│   ├── models.py
-│   ├── serializers.py
-│   ├── services.py
-│   ├── urls.py
-│   └── views.py
-├── .github/
-│   └── workflows/
-│       └── quality.yml
-├── .coveragerc
-├── .gitignore
-├── manage.py
-├── pytest.ini
-├── pyproject.toml
-├── requirements.txt
-└── README.md
-```
-
-## ⚙️ Installation and Setup
-
-### Prerequisites
-
-- Python 3.12 or a compatible Python version.
-- pip and venv.
-- Git.
-
-### 1. Clone the repository
-
-```bash
-git clone YOUR_REPOSITORY_URL
-cd taskflow
-```
-
-### 2. Create a virtual environment
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-### 3. Install dependencies
-
-```bash
-python -m pip install --upgrade pip
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+Copy-Item .env.example .env
 ```
 
-### 4. Apply database migrations
+Ouvrir `.env` et remplacer `DJANGO_SECRET_KEY` par une clé secrète personnelle. Ne jamais publier ce fichier.
+Charger les variables d'environnement dans la session PowerShell actuelle :
 
-```bash
-python manage.py migrate
-```
-
-### 5. Run the development server
-
-```bash
-python manage.py runserver
-```
-
-The API will be available at:
-
-`http://127.0.0.1:8000/api/tasks/`
-
-## 🔌 API Endpoints
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/tasks/` | List tasks |
-| POST | `/api/tasks/` | Create a task |
-| GET | `/api/tasks/{id}/` | Retrieve a task |
-| PATCH | `/api/tasks/{id}/` | Partially update a task |
-| PUT | `/api/tasks/{id}/` | Replace a task |
-| DELETE | `/api/tasks/{id}/` | Delete a task |
-
-### Example: Create a Task
-
-Request:
-
-```http
-POST /api/tasks/
-Content-Type: application/json
-```
-
-```json
-{
-  "title": "Learn unit testing",
-  "description": "Practice pytest and coverage",
-  "priority": "high",
-  "status": "todo",
-  "due_date": "2026-12-15"
+```powershell
+Get-Content .env | Where-Object {
+    $_.Trim() -and -not $_.Trim().StartsWith('#') -and $_.Contains('=')
+} | ForEach-Object {
+    $name, $value = $_ -split '=', 2
+    [Environment]::SetEnvironmentVariable($name.Trim(), $value.Trim(), 'Process')
 }
 ```
 
-Example successful response: HTTP `201 Created`.
+Cette étape doit être exécutée dans le même terminal PowerShell que les commandes Django.
 
-### Filtering
+Puis exécuter :
 
-Filter tasks by priority:
-
-`GET /api/tasks/?priority=high`
-
-Filter tasks by status:
-
-`GET /api/tasks/?status=done`
-
-Combine filters:
-
-`GET /api/tasks/?priority=high&status=todo`
-
-## 🧪 Testing Strategy
-
-TaskFlow uses automated tests to verify business rules and API behavior.
-
-### Unit Tests
-
-Test individual functions independently, including:
-
-- Task title validation.
-- Priority score calculation.
-- Invalid input handling.
-- Boundary values.
-
-Run unit tests:
-
-```bash
-pytest tasks/tests/test_services.py -v
+```powershell
+python manage.py migrate
+python manage.py seed_demo
+python manage.py runserver 8007
 ```
 
-### Integration Tests
+- API : http://127.0.0.1:8007/api/
+- Administration Django : http://127.0.0.1:8007/admin/
 
-Test interactions between the API, serializers, views, and database.
+### 2. Frontend
 
-Scenarios include:
+Ouvrir un deuxième terminal :
 
-- Creating a valid task.
-- Rejecting invalid input.
-- Listing and filtering tasks.
-- Updating task status.
-- Deleting tasks.
-- Handling nonexistent task IDs.
-
-Run integration tests:
-
-```bash
-pytest tasks/tests/test_api.py -v
+```powershell
+cd frontend
+npm install
 ```
 
-### Run All Tests
+Créer `frontend/.env` avec :
 
-```bash
+```env
+VITE_API_URL=http://127.0.0.1:8007/api
+```
+
+Puis lancer :
+
+```powershell
+npm run dev
+```
+
+Interface : http://localhost:5173/
+
+## Comptes de démonstration
+
+La commande `python manage.py seed_demo` crée trois comptes locaux : `admin`, `manager` et `member`.
+
+Lors de leur première création, des mots de passe aléatoires sont générés et affichés dans le terminal. Copiez-les immédiatement et conservez-les de manière sécurisée.
+
+Si les comptes existent déjà, leurs mots de passe ne sont pas modifiés.
+
+Ces comptes sont réservés à la démonstration locale. Ne pas utiliser cette commande ni ces comptes sur un serveur public ou en production.
+
+## Fonctionnalités
+
+- Authentification, déconnexion et gestion de trois rôles.
+- Gestion CRUD des projets, tâches et commentaires.
+- Gestion des comptes selon les permissions.
+- Affectation des tâches, échéances et priorités.
+- Recherche et filtres.
+- Workflow avec transitions de statut contrôlées par l'API.
+- Tableau de bord avec indicateurs.
+- Journal d'audit des opérations sensibles.
+- Interface responsive en français.
+
+## Tests et qualité
+
+Commandes principales :
+
+```powershell
+python manage.py check
 pytest -v
-```
-
-## 📊 Code Coverage
-
-Measure the code executed during tests:
-
-```bash
-coverage erase
 coverage run -m pytest
 coverage report -m
+ruff check config tasks
+bandit -r config tasks
+pip-audit
 ```
 
-Generate an HTML report:
+Les rapports de validation disponibles sont dans `reports/`.
 
-```bash
-coverage html
+Résultats enregistrés lors de la validation du projet :
+
+- Tests automatisés : 48 réussis.
+- Couverture globale : 88 %.
+- Tests multi-navigateurs : 4 réussis (Chromium et Firefox).
+- Test de charge : 20 utilisateurs, 0 échec, temps de réponse moyen de 20 ms.
+- pip-audit : 73 dépendances examinées, 0 vulnérabilité signalée lors de cette exécution.
+- ZAP : des alertes restent présentes, notamment une alerte CSRF de confiance faible et une divulgation d'information sur l'en-tête Server.
+
+Ces résultats correspondent à l'environnement et à la date de validation concernés. Ils ne constituent pas une garantie de sécurité ou de conformité absolue. Consulter les rapports détaillés avant toute conclusion.
+
+Documents :
+
+- `docs/MATRICE_TRACABILITE.md`
+- `docs/RAPPORT_CONFORMITE_ISO25010.md`
+
+## Docker Compose
+
+Créer le fichier `.env` à partir du modèle :
+
+```powershell
+Copy-Item .env.example .env
 ```
 
-Open it on Linux:
+Modifier `DJANGO_SECRET_KEY` dans `.env`, puis lancer depuis la racine :
 
-```bash
-xdg-open htmlcov/index.html
+```powershell
+docker compose up --build
 ```
 
-The project uses an initial coverage target of 85%, configured in `.coveragerc`.
+- Backend : http://localhost:8007
+- Frontend : http://localhost:5173
 
-Coverage is a useful metric, but it does not guarantee that every important behavior is tested.
+Arrêter les services avec `Ctrl+C`, puis :
 
-## 🔍 Code Quality
-
-Run Ruff to detect common Python issues:
-
-```bash
-ruff check .
+```powershell
+docker compose down
 ```
 
-Check Django configuration:
+Le serveur Django `runserver` utilisé dans cette configuration est destiné au développement et à la démonstration, pas à un déploiement de production.
 
-```bash
-python manage.py check
-```
+## Endpoints principaux
 
-Check whether model changes require new migrations:
+- `POST /api/auth/login/`
+- `POST /api/auth/logout/`
+- `GET /api/auth/me/`
+- CRUD `/api/projects/`
+- CRUD `/api/tasks/`
+- CRUD `/api/comments/`
+- Administration `/api/users/`
+- Journal `/api/audit/`
+- `GET /api/dashboard/`
+- `POST /api/tasks/{id}/transition/`
 
-```bash
-python manage.py makemigrations --check --dry-run
-```
+Les routes métier nécessitent une authentification par token :
 
-## 🔄 Continuous Integration
+`Authorization: Token <token>`
 
-GitHub Actions automatically runs quality checks when code is pushed to configured branches or a pull request is opened.
+## Sécurité et configuration
 
-The pipeline includes:
-
-1. Checking out the repository.
-2. Setting up Python.
-3. Installing dependencies.
-4. Running Ruff.
-5. Checking Django configuration and migrations.
-6. Executing tests with coverage.
-
-A failing test or a violated coverage threshold causes the pipeline to fail.
-
-## 📐 Software Quality Principles
-
-This project explores the following concepts:
-
-- **Correctness:** the application follows its business rules.
-- **Reliability:** expected behavior is preserved across changes.
-- **Maintainability:** code is organized into understandable modules.
-- **Testability:** business logic can be tested independently.
-- **Regression testing:** tests detect previously fixed bugs.
-- **Code coverage:** measurement of executed lines and branches.
-- **Continuous integration:** automated verification of code changes.
-
-## 🚀 Future Improvements
-
-- Add authentication and task ownership.
-- Introduce pagination and search.
-- Add PostgreSQL support.
-- Add API documentation using OpenAPI/Swagger.
-- Introduce mutation testing to evaluate test effectiveness.
-- Integrate SonarQube for maintainability analysis.
-- Add Docker support.
-- Expand integration and permission tests.
-
-## 📚 Learning Outcomes
-
-By completing TaskFlow, the developer will gain practical experience with Django REST APIs, unit testing, integration testing, coverage analysis, static code analysis, regression prevention, and automated CI pipelines.
-
-## 👤 Author
-
-**Your Name**
-
-- GitHub: YOUR_GITHUB_USERNAME
-
-## 📄 License
-
-Choose and add an appropriate open-source license if you intend to distribute the project.
+- Ne jamais committer `.env`, les bases de données locales ou les clés secrètes.
+- Utiliser des mots de passe personnels et robustes.
+- Configurer HTTPS, les cookies sécurisés et les paramètres de production avant un déploiement public.
+- Les comptes de démonstration sont réservés à un environnement local.
