@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import axios from 'axios'
+import { UserCircle } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import {
   Activity,
@@ -109,6 +110,7 @@ type Tab =
   | 'comments'
   | 'users'
   | 'audit'
+  | 'profile'
 
 type ListResponse<T> = {
   results?: T[]
@@ -686,19 +688,20 @@ function App() {
     ['tasks', 'Tâches', ListTodo],
     ['projects', 'Projets', FolderKanban],
     ['comments', 'Commentaires', MessageSquare],
+    ['profile', 'Mon profil', UserCircle],
     ...(isAdmin
       ? [
-          ['users', 'Utilisateurs', Users] as [
-            Tab,
-            string,
-            LucideIcon
-          ],
-          ['audit', 'Journal d’audit', Activity] as [
-            Tab,
-            string,
-            LucideIcon
-          ]
+        ['users', 'Utilisateurs', Users] as [
+          Tab,
+          string,
+          LucideIcon
+        ],
+        ['audit', 'Journal d’audit', Activity] as [
+          Tab,
+          string,
+          LucideIcon
         ]
+      ]
       : [])
   ]
 
@@ -902,13 +905,12 @@ function App() {
                   <div className="progress-track">
                     <i
                       style={{
-                        width: `${
-                          stats.total_tasks
+                        width: `${stats.total_tasks
                             ? Math.round(
-                                (stats.done / stats.total_tasks) * 100
-                              )
+                              (stats.done / stats.total_tasks) * 100
+                            )
                             : 0
-                        }%`
+                          }%`
                       }}
                     />
                   </div>
@@ -916,8 +918,8 @@ function App() {
                   <small>
                     {stats.total_tasks
                       ? Math.round(
-                          (stats.done / stats.total_tasks) * 100
-                        )
+                        (stats.done / stats.total_tasks) * 100
+                      )
                       : 0}
                     % de progression
                   </small>
@@ -1052,11 +1054,10 @@ function App() {
                         <i
                           className={String(key)}
                           style={{
-                            width: `${
-                              stats.total_tasks
+                            width: `${stats.total_tasks
                                 ? (Number(value) / stats.total_tasks) * 100
                                 : 0
-                            }%`
+                              }%`
                           }}
                         />
                       </div>
@@ -1444,9 +1445,8 @@ function App() {
 
                         <td>
                           <span
-                            className={`status-dot ${
-                              userItem.is_active === false ? 'off' : ''
-                            }`}
+                            className={`status-dot ${userItem.is_active === false ? 'off' : ''
+                              }`}
                           >
                             {userItem.is_active === false
                               ? 'Inactif'
@@ -1535,6 +1535,67 @@ function App() {
           </section>
         )}
 
+        {tab === 'profile' && user && (
+          <section className="panel page-panel profile-page">
+            <PageHead
+              eyebrow="VOTRE COMPTE"
+              title="Mon profil"
+              subtitle="Consultez les informations de votre compte TaskFlow."
+            />
+
+            <div className="profile-header">
+              <div className="profile-large-avatar">
+                {user.username.slice(0, 1).toUpperCase()}
+              </div>
+
+              <div>
+                <h2>
+                  {user.first_name || user.username}{' '}
+                  {user.last_name || ''}
+                </h2>
+                <p>{user.email || 'Aucune adresse email'}</p>
+
+                <span className={`role-badge ${user.role}`}>
+                  {user.role}
+                </span>
+              </div>
+            </div>
+
+            <div className="profile-details">
+              <div className="profile-detail">
+                <span>Nom d'utilisateur</span>
+                <strong>{user.username}</strong>
+              </div>
+
+              <div className="profile-detail">
+                <span>Prénom</span>
+                <strong>{user.first_name || 'Non renseigné'}</strong>
+              </div>
+
+              <div className="profile-detail">
+                <span>Nom</span>
+                <strong>{user.last_name || 'Non renseigné'}</strong>
+              </div>
+
+              <div className="profile-detail">
+                <span>Adresse email</span>
+                <strong>{user.email || 'Non renseignée'}</strong>
+              </div>
+
+              <div className="profile-detail">
+                <span>Rôle</span>
+                <strong>{user.role}</strong>
+              </div>
+
+              <div className="profile-detail">
+                <span>État du compte</span>
+                <strong>
+                  {user.is_active === false ? 'Inactif' : 'Actif'}
+                </strong>
+              </div>
+            </div>
+          </section>
+        )}
         <footer className="app-footer">
           <span>
             TaskFlow <i>·</i> Gestion collaborative de projets
